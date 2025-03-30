@@ -8,4 +8,4 @@ if [ -z "$JMENO" ] || [ -z "$TEMA" ]; then
   exit 1
 fi
 
-echo "Nazdar $JMENO! Tak co, připraven na $TEMA?"
+echo "Nazdar $JMENO! Tak co, připraven na hihi $TEMA?"

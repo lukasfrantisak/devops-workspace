@@ -1,0 +1,27 @@
+services:
+  web:
+    build: .
+    container_name: flask-web
+    ports:
+      - "5001:5000"
+    depends_on:
+      - postgres-db
+      - redis-db
+    environment:
+      DB_HOST: postgres-db
+      DB_NAME: mydatabase
+      DB_USER: postgres
+      DB_PASSWORD: mysecretpassword
+
+  postgres-db:
+    image: postgres:15
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+
+  redis-db:
+    image: redis:alpine
+    container_name: redis-db
