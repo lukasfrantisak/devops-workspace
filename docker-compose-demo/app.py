@@ -2,6 +2,7 @@ from flask import Flask, request, redirect, render_template_string
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import redis
+import os
 
 app = Flask(__name__)
 
@@ -11,7 +12,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # Redis
-redis_client = redis.Redis(host='redis-db', port=6379, decode_responses=True)
+redis_host = os.getenv("REDIS_HOST", "redis-db")
+redis_client = redis.Redis(host=redis_host, port=6379, decode_responses=True)
 
 # SQLAlchemy model
 class Guest(db.Model):
