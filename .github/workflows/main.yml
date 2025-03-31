@@ -45,12 +45,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install flask flask_sqlalchemy psycopg2 redis pytest
 
-      - name: Wait for services to be ready
+      - name: Wait for PostgreSQL
         run: |
-          echo "⏳ Waiting for PostgreSQL and Redis..."
-          sleep 10
+          echo "Waiting for PostgreSQL..."
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Postgres not ready yet..."
+            sleep 2
+          done
+
+      - name: Wait for Redis
+        run: |
+          echo "Waiting for Redis..."
+          until redis-cli -h localhost ping | grep PONG; do
+            echo "Redis not ready yet..."
+            sleep 2
+          done
 
       - name: Run tests
         working-directory: ./docker-compose-demo
-        run: |
-          pytest test_app.py
+        run: pytest test_app.py
