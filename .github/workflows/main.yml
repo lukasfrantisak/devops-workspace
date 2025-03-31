@@ -7,6 +7,20 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
       redis:
         image: redis
         ports:
@@ -31,9 +45,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install flask flask_sqlalchemy psycopg2 redis pytest
 
+      - name: Wait for services to be ready
+        run: |
+          echo "⏳ Waiting for PostgreSQL and Redis..."
+          sleep 10
+
       - name: Run tests
         working-directory: ./docker-compose-demo
-        env:
-          REDIS_HOST: localhost
         run: |
           pytest test_app.py
