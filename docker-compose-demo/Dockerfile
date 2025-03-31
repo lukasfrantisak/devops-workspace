@@ -3,11 +3,9 @@ FROM python:3.9-alpine
 WORKDIR /app
 
 COPY app.py .
-
-RUN pip install --no-cache-dir flask psycopg2-binary
-
-EXPOSE 5000
-
 COPY wait-for-postgres.sh /wait-for-postgres.sh
-CMD ["/wait-for-postgres.sh"]
 
+RUN pip install --no-cache-dir flask flask_sqlalchemy psycopg2-binary redis
+RUN chmod +x /wait-for-postgres.sh
+
+CMD ["/wait-for-postgres.sh"]
