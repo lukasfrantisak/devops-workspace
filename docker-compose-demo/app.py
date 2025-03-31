@@ -6,16 +6,16 @@ import os
 
 app = Flask(__name__)
 
-# PostgreSQL
+# PostgreSQL (SQLAlchemy)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@postgres-db:5432/postgres'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Redis
-redis_host = os.getenv("REDIS_HOST", "redis-db")
-redis_client = redis.Redis(host=redis_host, port=6379, decode_responses=True)
+# Redis client – bude inicializován později
+redis_client = None
 
-# SQLAlchemy model
+
+# MODELY
 class Guest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -25,14 +25,22 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(200), nullable=False)
     completed = db.Column(db.Boolean, default=False)
-    priority = db.Column(db.String(10), default='střední')  # nový řádek
+    priority = db.Column(db.String(10), default='střední')
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+# ROUTES
 @app.route('/')
 def index():
-    count = redis_client.incr('visit_count')
-    return f"Návštěva č. {count} (uloženo v Redis)"
+    global redis_client
+    if redis_client is None:
+        redis_host = os.getenv("REDIS_HOST", "redis-db")
+        redis_client = redis.Redis(host=redis_host, port=6379, decode_responses=True)
+    try:
+        count = redis_client.incr('visit_count')
+    except redis.exceptions.ConnectionError:
+        count = "N/A (Redis není dostupný)"
+    return f"Návštěva č. {count}"
 
 @app.route('/form', methods=['GET', 'POST'])
 def guest_form():
@@ -47,14 +55,9 @@ def guest_form():
     return render_template_string('''
         <h2>Zapiš se</h2>
         <form method="POST">
-    <input type="text" name="description" placeholder="Nový úkol" required>
-    <select name="priority">
-        <option value="nízká">Nízká</option>
-        <option value="střední" selected>Střední</option>
-        <option value="vysoká">Vysoká</option>
-    </select>
-    <input type="submit" value="Přidat">
-</form>
+            <input type="text" name="name" placeholder="Tvé jméno" required>
+            <input type="submit" value="Zapsat">
+        </form>
         <form method="post" action="/reset">
             <button type="submit">Resetovat počítadlo</button>
         </form>
@@ -68,6 +71,10 @@ def guest_form():
 
 @app.route('/stats')
 def stats():
+    global redis_client
+    if redis_client is None:
+        redis_host = os.getenv("REDIS_HOST", "redis-db")
+        redis_client = redis.Redis(host=redis_host, port=6379, decode_responses=True)
     try:
         visits = redis_client.get('visit_count') or 0
         guests = Guest.query.count()
@@ -82,7 +89,15 @@ def stats():
     except Exception as e:
         return f"❌ Chyba při načítání statistik: {e}"
 
-# 📝 Výpis všech úkolů
+@app.route('/reset', methods=['POST'])
+def reset_counter():
+    global redis_client
+    if redis_client is None:
+        redis_host = os.getenv("REDIS_HOST", "redis-db")
+        redis_client = redis.Redis(host=redis_host, port=6379, decode_responses=True)
+    redis_client.set('visit_count', 0)
+    return redirect('/form')
+
 @app.route('/tasks', methods=['GET', 'POST'])
 def task_list():
     if request.method == 'POST':
@@ -111,65 +126,30 @@ def task_list():
             <li style="margin-bottom: 10px;">
                 <form method="post" action="/toggle-task/{{ task.id }}" style="display:inline;">
                     <button type="submit">
-                        {% if task.completed %}
-                            ✅
-                        {% else %}
-                            ☐
-                        {% endif %}
+                        {% if task.completed %}✅{% else %}☐{% endif %}
                     </button>
                 </form>
                 <span style="text-decoration: {% if task.completed %}line-through{% else %}none{% endif %};">
                     {{ task.description }}
                 </span>
                 <strong>[{{ task.priority|capitalize }}]</strong>
-               <form method="post" action="/update-priority/{{ task.id }}" style="display:inline;">
-    <select name="priority" onchange="this.form.submit()">
-        <option value="nízká" {% if task.priority == 'nízká' %}selected{% endif %}>Nízká</option>
-        <option value="střední" {% if task.priority == 'střední' %}selected{% endif %}>Střední</option>
-        <option value="vysoká" {% if task.priority == 'vysoká' %}selected{% endif %}>Vysoká</option>
-    </select>
-</form>
+                <form method="post" action="/update-priority/{{ task.id }}" style="display:inline;">
+                    <select name="priority" onchange="this.form.submit()">
+                        <option value="nízká" {% if task.priority == 'nízká' %}selected{% endif %}>Nízká</option>
+                        <option value="střední" {% if task.priority == 'střední' %}selected{% endif %}>Střední</option>
+                        <option value="vysoká" {% if task.priority == 'vysoká' %}selected{% endif %}>Vysoká</option>
+                    </select>
+                </form>
             </li>
         {% endfor %}
         </ul>
         <a href="/">← Zpět na úvod</a>
     ''', tasks=tasks)
 
-@app.route('/dashboard')
-def dashboard():
-    count = redis_client.get('visit_count') or 0
-    guest_count = Guest.query.count()
-    return f'''
-        <h2>📊 Dashboard</h2>
-        <p>Počet návštěv (Redis): {count}</p>
-        <p>Počet hostů (PostgreSQL): {guest_count}</p>
-        <a href="/">← Zpět</a>
-    '''
-
-@app.route('/reset', methods=['POST'])
-def reset_counter():
-    redis_client.set('visit_count', 0)
-    return redirect('/form')
-
-@app.route('/complete/<int:task_id>', methods=['POST'])
-def complete_task(task_id):
-    task = Task.query.get(task_id)
-    if task:
-        task.completed = True
-        db.session.commit()
-    return redirect('/tasks')
-
 @app.route('/toggle-task/<int:task_id>', methods=['POST'])
 def toggle_task(task_id):
     task = Task.query.get_or_404(task_id)
     task.completed = not task.completed
-    db.session.commit()
-    return redirect('/tasks')
-
-@app.route('/delete-task/<int:task_id>', methods=['POST'])
-def delete_task(task_id):
-    task = Task.query.get_or_404(task_id)
-    db.session.delete(task)
     db.session.commit()
     return redirect('/tasks')
 
