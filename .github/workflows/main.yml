@@ -1,17 +1,21 @@
 name: Build and Test Flask App
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./docker-compose-demo
+
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout repository
@@ -28,6 +32,7 @@ jobs:
           pip install flask flask_sqlalchemy psycopg2 redis
 
       - name: Run tests
+        working-directory: ./docker-compose-demo
         run: |
           echo "from app import app" > test_import.py
           echo "client = app.test_client()" >> test_import.py
