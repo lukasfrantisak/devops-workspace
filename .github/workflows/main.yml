@@ -33,6 +33,8 @@ jobs:
 
       - name: Run tests
         working-directory: ./docker-compose-demo
+        env:
+          REDIS_HOST: localhost
         run: |
           echo "from app import app" > test_import.py
           echo "client = app.test_client()" >> test_import.py
