@@ -14,8 +14,8 @@ def wait_for(host, port, timeout=30):
             raise TimeoutError(f"Nepodařilo se připojit k {host}:{port} během {timeout}s")
 
 # Počkej na Redis a PostgreSQL
-wait_for("redis-db", 6379)
-wait_for("postgres-db", 5432)
+wait_for("redis-db", 6379, timeout=60)
+wait_for("postgres-db", 5432, timeout=60)
 
 # Importuj Flask aplikaci až po ověření služeb
 from app import app
