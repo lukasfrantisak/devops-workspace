@@ -1,81 +1,83 @@
-# Flask + PostgreSQL + Redis (Docker Compose)
 
-This is a simple demo application using Flask, PostgreSQL, and Redis connected via Docker Compose.
+# 🐳 Flask + Docker Compose demo
 
-## 🇺🇸 English
+Jednoduchý projekt, kde běží Flask aplikace s PostgreSQL a Redisem pomocí Docker Compose. Cílem je naučit se základy vývoje, práce s kontejnery a připravit prostředí pro CI/CD.
 
-### 💡 What it does
+---
 
-- Counts visits using **Redis**
-- Stores guest names with timestamps in **PostgreSQL**
-- Displays a dashboard with guest list and a form
+## 🧠 Co to umí
 
-### 🧱 Stack
+- 📋 **Formulář pro návštěvníky**
+  - Zápis jména a uložení do PostgreSQL
+  - Výpis všech návštěvníků
+- 📝 **TODO seznam**
+  - Přidání úkolu s prioritou (nízká, střední, vysoká)
+  - Označení úkolu jako hotového
+  - Smazání úkolu
+  - Uložení do PostgreSQL
+- 📊 **Statistiky**
+  - Počet návštěv uložený v Redis
+  - Počet hostů v databázi
 
-- **Flask** (Python)
-- **PostgreSQL** (via SQLAlchemy)
-- **Redis**
-- **Docker Compose**
+---
 
-### ▶️ How to run
+## 🚀 Spuštění projektu
+
+1. Naklonuj repozitář:
 
 ```bash
-# Clone the repo
-git clone https://github.com/lukasfrantisak/devops-workspace.git
-cd devops-workspace/docker-compose-demo
+git clone https://github.com/tvoje-username/tvuj-repozitar.git
+cd tvuj-repozitar
+```
 
-# Build and run
+2. Spusť aplikaci:
+
+```bash
 docker compose up --build
 ```
 
-Open your browser:
+3. Otevři v prohlížeči:
 
-- [http://localhost:5001/](http://localhost:5001/) – Visit counter
-- [http://localhost:5001/form](http://localhost:5001/form) – Guest form
-- [http://localhost:5001/dashboard](http://localhost:5001/dashboard) – Guest dashboard
+- http://localhost:5001 — hlavní stránka
+- http://localhost:5001/form — formulář pro návštěvníky
+- http://localhost:5001/tasks — TODO seznam
+- http://localhost:5001/stats — statistiky
 
-### 🧹 Reset database (optional)
+---
 
-```bash
-docker compose down -v
+## 🧱 Struktura projektu
+
+```
+📁 docker-compose-demo
+├── app.py                 # Flask aplikace
+├── Dockerfile             # Build kontejneru s Pythonem
+├── docker-compose.yml     # Definice služeb (Flask, Redis, PostgreSQL)
+├── wait-for-postgres.sh   # Skript čekající na PostgreSQL
+└── README.md              # Tento soubor
 ```
 
 ---
 
-## 🇨🇿 Čeština
+## ✍️ Co plánujeme dál
 
-### 💡 Co to dělá
+- ✅ Přidání priority do úkolů
+- ✅ Funkce označit jako hotovo + mazání
+- 🔄 CI/CD workflow přes GitHub Actions
+- 🌍 Deployment aplikace do cloudu (Render / Railway / Heroku / ...)
 
-- Počítá návštěvy pomocí **Redis**
-- Ukládá jména a čas přidání do **PostgreSQL**
-- Zobrazuje dashboard se seznamem a formulářem
+---
 
-### 🧱 Použité technologie
+## 📚 Využité technologie
 
-- **Flask** (Python)
-- **PostgreSQL** (přes SQLAlchemy)
-- **Redis**
-- **Docker Compose**
+- [Python 3.9 (Alpine)](https://hub.docker.com/_/python)
+- [Flask](https://flask.palletsprojects.com/)
+- [PostgreSQL](https://www.postgresql.org/)
+- [Redis](https://redis.io/)
+- [Docker Compose](https://docs.docker.com/compose/)
 
-### ▶️ Jak spustit
+---
 
-```bash
-# Klonování repozitáře
-git clone https://github.com/lukasfrantisak/devops-workspace.git
-cd devops-workspace/docker-compose-demo
+## ✨ Autor
 
-# Build a spuštění
-docker compose up --build
-```
-
-Otevři prohlížeč:
-
-- [http://localhost:5001/](http://localhost:5001/) – Počítadlo návštěv
-- [http://localhost:5001/form](http://localhost:5001/form) – Formulář
-- [http://localhost:5001/dashboard](http://localhost:5001/dashboard) – Dashboard se seznamem
-
-### 🧹 Reset databáze (volitelně)
-
-```bash
-docker compose down -v
-```
+👤 [@lukasfrantisak](https://github.com/lukasfrantisak)  
+🎯 Cíl: stát se DevOps mistrem 💪
