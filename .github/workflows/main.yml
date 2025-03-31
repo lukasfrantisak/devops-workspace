@@ -26,10 +26,10 @@ jobs:
         ports:
           - 6379:6379
         options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd "bash -c 'echo > /dev/tcp/localhost/6379'"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
 
     steps:
       - name: Checkout repository
@@ -45,22 +45,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install flask flask_sqlalchemy psycopg2 redis pytest
 
-      - name: Wait for PostgreSQL
+      - name: Wait for services to be ready
         run: |
-          echo "Waiting for PostgreSQL..."
-          until pg_isready -h localhost -p 5432 -U postgres; do
-            echo "Postgres not ready yet..."
-            sleep 2
-          done
-
-      - name: Wait for Redis
-        run: |
-          echo "Waiting for Redis..."
-          until redis-cli -h localhost ping | grep PONG; do
-            echo "Redis not ready yet..."
-            sleep 2
-          done
+          echo "⏳ Waiting for PostgreSQL and Redis..."
+          sleep 10
 
       - name: Run tests
         working-directory: ./docker-compose-demo
-        run: pytest test_app.py
+        run: |
+          pytest test_app.py
