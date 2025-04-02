@@ -41,6 +41,5 @@ jobs:
         run: echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres" >> $GITHUB_ENV
 
       - name: Run tests
-        run: |
-          cd docker-compose-demo
-          pytest test_app.py
+        working-directory: docker-compose-demo
+        run: pytest test_app.py
