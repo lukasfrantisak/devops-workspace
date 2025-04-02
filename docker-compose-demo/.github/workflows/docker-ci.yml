@@ -37,6 +37,9 @@ jobs:
         run: |
           pip install flask flask_sqlalchemy psycopg2-binary pytest
 
+      - name: Set environment variables
+        run: echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres" >> $GITHUB_ENV
+
       - name: Run tests
         run: |
           cd docker-compose-demo
