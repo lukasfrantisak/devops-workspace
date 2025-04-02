@@ -26,7 +26,8 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -41,5 +42,5 @@ jobs:
         run: echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres" >> $GITHUB_ENV
 
       - name: Run tests
-        working-directory: docker-compose-demo
         run: pytest test_app.py
+        working-directory: docker-compose-demo
