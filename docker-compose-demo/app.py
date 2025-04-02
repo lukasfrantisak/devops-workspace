@@ -36,10 +36,6 @@ def wait_for_postgres():
             print("⏳ Čekám na PostgreSQL...")
             time.sleep(1)
 
-wait_for_postgres()
-with app.app_context():
-    db.create_all()
-
 @app.route('/')
 def index():
     return "<h1><b>Flask + Docker is alive 🚀</b></h1>"
@@ -76,5 +72,23 @@ def tasks():
         </ul>
     ''', tasks=tasks)
 
+@app.route('/form', methods=['GET', 'POST'])
+def form():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        return f"<h2>Díky, {name}!</h2>"
+
+    return render_template_string('''
+        <h2>Zadej své jméno</h2>
+        <form method="POST">
+            <input name="name" placeholder="Tvé jméno">
+            <button type="submit">Odeslat</button>
+        </form>
+    ''')
+
+# ✅ Spustí se jen při přímém běhu serveru
 if __name__ == '__main__':
+    wait_for_postgres()
+    with app.app_context():
+        db.create_all()
     app.run(debug=True, host='0.0.0.0', port=5001)
