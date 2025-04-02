@@ -35,7 +35,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install flask flask_sqlalchemy psycopg2-binary
+          pip install flask flask_sqlalchemy psycopg2-binary pytest
 
-      - name: Run app (placeholder test)
-        run: echo "✅ App test passed (placeholder)"
+      - name: Run tests
+        run: |
+          cd docker-compose-demo
+          pytest test_app.py
