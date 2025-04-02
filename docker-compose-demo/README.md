@@ -1,23 +1,41 @@
+# 🐳 Flask + Docker Compose Demo
 
-# 🐳 Flask + Docker Compose demo
-
-Jednoduchý projekt, kde běží Flask aplikace s PostgreSQL a Redisem pomocí Docker Compose. Cílem je naučit se základy vývoje, práce s kontejnery a připravit prostředí pro CI/CD.
+Malý, ale silný projekt pro učení se Dockeru, vývoje ve Flasku a základů DevOps.  
+Flask aplikace běží s PostgreSQL a Redisem díky Docker Compose.  
+Součástí je i CI/CD pipeline přes GitHub Actions 🚀
 
 ---
 
-## 🧠 Co to umí
+## 🧠 Funkce
 
-- 📋 **Formulář pro návštěvníky**
-  - Zápis jména a uložení do PostgreSQL
-  - Výpis všech návštěvníků
-- 📝 **TODO seznam**
-  - Přidání úkolu s prioritou (nízká, střední, vysoká)
-  - Označení úkolu jako hotového
-  - Smazání úkolu
-  - Uložení do PostgreSQL
-- 📊 **Statistiky**
-  - Počet návštěv uložený v Redis
-  - Počet hostů v databázi
+### 📋 Formulář pro návštěvníky
+- Zápis jména → uložení do PostgreSQL
+- Výpis všech návštěvníků
+
+### ✅ TODO seznam
+- Přidání úkolu s prioritou (nízká / střední / vysoká)
+- Označení úkolu jako hotového
+- Smazání úkolu
+- Uložení do PostgreSQL
+
+### 📊 Statistiky
+- Počet návštěv (Redis)
+- Počet hostů (PostgreSQL)
+
+---
+
+## 🛠 CI/CD
+
+Projekt obsahuje CI workflow pomocí GitHub Actions:
+
+```
+📁 .github/workflows/
+└── docker-ci.yml
+```
+
+CI provádí:
+- ✅ Build Docker obrazu
+- ✅ Ověření, že Flask app úspěšně startuje pomocí `test_app.py`
 
 ---
 
@@ -27,7 +45,7 @@ Jednoduchý projekt, kde běží Flask aplikace s PostgreSQL a Redisem pomocí D
 
 ```bash
 git clone https://github.com/tvoje-username/tvuj-repozitar.git
-cd tvuj-repozitar
+cd docker-compose-demo
 ```
 
 2. Spusť aplikaci:
@@ -38,46 +56,52 @@ docker compose up --build
 
 3. Otevři v prohlížeči:
 
-- http://localhost:5001 — hlavní stránka
-- http://localhost:5001/form — formulář pro návštěvníky
-- http://localhost:5001/tasks — TODO seznam
-- http://localhost:5001/stats — statistiky
+- [http://localhost:5001](http://localhost:5001) — hlavní stránka
+- [http://localhost:5001/form](http://localhost:5001/form) — formulář
+- [http://localhost:5001/tasks](http://localhost:5001/tasks) — TODO seznam
+- [http://localhost:5001/stats](http://localhost:5001/stats) — statistiky
 
 ---
 
-## 🧱 Struktura projektu
+## 📁 Struktura projektu
 
 ```
-📁 docker-compose-demo
+docker-compose-demo/
 ├── app.py                 # Flask aplikace
-├── Dockerfile             # Build kontejneru s Pythonem
-├── docker-compose.yml     # Definice služeb (Flask, Redis, PostgreSQL)
+├── test_app.py            # Test pro CI workflow
+├── Dockerfile             # Definice Python kontejneru
+├── docker-compose.yml     # Služby: web, postgres, redis
 ├── wait-for-postgres.sh   # Skript čekající na PostgreSQL
+├── .github/
+│   └── workflows/
+│       └── docker-ci.yml  # CI/CD workflow
 └── README.md              # Tento soubor
 ```
 
 ---
 
-## ✍️ Co plánujeme dál
+## 🧪 Plánovaný vývoj
 
-- ✅ Přidání priority do úkolů
-- ✅ Funkce označit jako hotovo + mazání
-- 🔄 CI/CD workflow přes GitHub Actions
-- 🌍 Deployment aplikace do cloudu (Render / Railway / Heroku / ...)
+- ✅ Formulář a zápis do DB
+- ✅ TODO seznam s prioritami
+- ✅ CI/CD workflow přes GitHub Actions
+- ⏳ Možnost testování přes `pytest`
+- 🌍 Deployment do cloudu (Render / Railway / Heroku)
 
 ---
 
-## 📚 Využité technologie
+## 📚 Technologie
 
-- [Python 3.9 (Alpine)](https://hub.docker.com/_/python)
-- [Flask](https://flask.palletsprojects.com/)
-- [PostgreSQL](https://www.postgresql.org/)
-- [Redis](https://redis.io/)
-- [Docker Compose](https://docs.docker.com/compose/)
+- [🐍 Python 3.9 (Alpine)](https://hub.docker.com/_/python)
+- [🔥 Flask](https://flask.palletsprojects.com/)
+- [🐘 PostgreSQL](https://www.postgresql.org/)
+- [⚡ Redis](https://redis.io/)
+- [🐳 Docker + Compose](https://docs.docker.com/compose/)
+- [🧪 GitHub Actions](https://docs.github.com/en/actions)
 
 ---
 
 ## ✨ Autor
 
 👤 [@lukasfrantisak](https://github.com/lukasfrantisak)  
-🎯 Cíl: stát se DevOps mistrem 💪
+🎯 Cíl: stát se DevOps mistrem 💪 
