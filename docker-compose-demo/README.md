@@ -104,4 +104,4 @@ docker-compose-demo/
 ## ✨ Autor
 
 👤 [@lukasfrantisak](https://github.com/lukasfrantisak)  
-🎯 Cíl: stát se DevOps mistrem 💪 
+🎯 Cíl: stát se DevOps mistrem 💪  
