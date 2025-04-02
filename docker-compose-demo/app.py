@@ -4,27 +4,27 @@ import os
 import time
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@postgres-db:5432/postgres'
+
+# 🔧 Dynamické připojení podle prostředí
+DB_HOST = 'postgres-db' if not app.testing else 'localhost'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://postgres:postgres@{DB_HOST}:5432/postgres'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Model pro návštěvy
 class Visitor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
-# Model pro úkoly
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(200), nullable=False)
     done = db.Column(db.Boolean, default=False)
 
-# ⏳ Počkej, než bude PostgreSQL připraven
 def wait_for_postgres():
     import psycopg2
     while True:
         try:
             conn = psycopg2.connect(
-                host="postgres-db",
+                host=DB_HOST,
                 database="postgres",
                 user="postgres",
                 password="postgres"
@@ -86,7 +86,6 @@ def form():
         </form>
     ''')
 
-# ✅ Spustí se jen při přímém běhu serveru
 if __name__ == '__main__':
     wait_for_postgres()
     with app.app_context():
