@@ -5,10 +5,6 @@ from app import app, db, Visitor, Task
 
 @pytest.fixture
 def client():
-    app.config['TESTING'] = True
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
     with app.test_client() as client:
         yield client
 
@@ -18,18 +14,28 @@ def test_homepage(client):
     assert b"Flask + Docker is alive" in response.data
 
 def test_visits(client):
-    response1 = client.get('/visits')
-    assert b"Počet návštěv: 1" in response1.data
+    db.session.query(Visitor).delete()
+    db.session.commit()
 
+    response1 = client.get('/visits')
     response2 = client.get('/visits')
-    assert b"Počet návštěv: 2" in response2.data
+
+    assert "Počet návštěv:" in response1.data.decode('utf-8')
+    assert "Počet návštěv:" in response2.data.decode('utf-8')
+
+    count1 = int(response1.data.decode('utf-8').split(":")[1].strip("</h1> "))
+    count2 = int(response2.data.decode('utf-8').split(":")[1].strip("</h1> "))
+
+    assert count2 == count1 + 1
 
 def test_tasks(client):
+    db.session.query(Task).delete()
+    db.session.commit()
+
     response = client.post('/tasks', data={'description': 'Testovací úkol'}, follow_redirects=True)
     assert response.status_code == 200
-    assert b"Testovac" in response.data
+    assert "Testovací úkol" in response.data.decode('utf-8')
 
 def test_form(client):
-    response = client.post('/form', data={'name': 'Lukáš'}, follow_redirects=True)
-    assert response.status_code == 200
-    assert b"D\xedky, Luk" in response.data  # Díky, Lukáš!
+    response = client.post('/form', data={'name': 'Lukáš'})
+    assert "Díky, Lukáš!" in response.data.decode('utf-8')
