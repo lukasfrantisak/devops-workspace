@@ -1,79 +1,80 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, render_template_string, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from redis import Redis
-from datetime import datetime
 import os
+import time
 
 app = Flask(__name__)
-
-# OPRAVA: správné jméno hostitele pro PostgreSQL v rámci GitHub Actions
-POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
-POSTGRES_DB = os.getenv("POSTGRES_DB", "postgres")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "postgres")  # <- změna z "postgres-db"
-POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
-
-REDIS_HOST = os.getenv("REDIS_HOST", "redis")  # <- GitHub Actions alias
-REDIS_PORT = os.getenv("REDIS_PORT", "6379")
-
-app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@postgres-db:5432/postgres'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-redis = Redis(host=REDIS_HOST, port=REDIS_PORT)
 
+# Model pro návštěvy
 class Visitor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
+# Model pro úkoly
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    description = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.String(200), nullable=False)
     done = db.Column(db.Boolean, default=False)
-    priority = db.Column(db.String(20), default="střední")
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-@app.route("/")
+# ⏳ Počkej, než bude PostgreSQL připraven
+def wait_for_postgres():
+    import psycopg2
+    while True:
+        try:
+            conn = psycopg2.connect(
+                host="postgres-db",
+                database="postgres",
+                user="postgres",
+                password="postgres"
+            )
+            conn.close()
+            print("✅ PostgreSQL je dostupná. Spouštím Flask...")
+            break
+        except:
+            print("⏳ Čekám na PostgreSQL...")
+            time.sleep(1)
+
+wait_for_postgres()
+with app.app_context():
+    db.create_all()
+
+@app.route('/')
 def index():
-    count = redis.incr("hits")
-    return f"Tato stránka byla navštívena {count}krát."
+    return "<h1><b>Flask + Docker is alive 🚀</b></h1>"
 
-@app.route("/visitors", methods=["GET", "POST"])
-def visitors():
-    if request.method == "POST":
-        name = request.form["name"]
-        visitor = Visitor(name=name)
-        db.session.add(visitor)
-        db.session.commit()
-        return redirect(url_for("visitors"))
-    all_visitors = Visitor.query.order_by(Visitor.timestamp.desc()).all()
-    return render_template("visitors.html", visitors=all_visitors)
+@app.route('/visits')
+def visits():
+    visitor = Visitor()
+    db.session.add(visitor)
+    db.session.commit()
+    count = Visitor.query.count()
+    return f"<h1>Počet návštěv: {count}</h1>"
 
-@app.route("/tasks", methods=["GET", "POST"])
-def task_list():
-    if request.method == "POST":
-        description = request.form["description"]
-        priority = request.form["priority"]
-        task = Task(description=description, priority=priority)
-        db.session.add(task)
-        db.session.commit()
-        return redirect(url_for("task_list"))
-    tasks = Task.query.order_by(Task.timestamp.desc()).all()
-    return render_template("tasks.html", tasks=tasks)
+@app.route('/tasks', methods=['GET', 'POST'])
+def tasks():
+    if request.method == 'POST':
+        desc = request.form.get('description')
+        if desc:
+            new_task = Task(description=desc)
+            db.session.add(new_task)
+            db.session.commit()
+            return redirect(url_for('tasks'))
 
-@app.route("/tasks/<int:task_id>/done", methods=["POST"])
-def mark_done(task_id):
-    task = Task.query.get(task_id)
-    if task:
-        task.done = True
-        db.session.commit()
-    return redirect(url_for("task_list"))
+    tasks = Task.query.all()
+    return render_template_string('''
+        <h1>Seznam úkolů 📝</h1>
+        <form method="post">
+            <input name="description" placeholder="Zadej nový úkol">
+            <button type="submit">Přidat</button>
+        </form>
+        <ul>
+        {% for task in tasks %}
+            <li>{{ task.description }}</li>
+        {% endfor %}
+        </ul>
+    ''', tasks=tasks)
 
-@app.route("/tasks/<int:task_id>/delete", methods=["POST"])
-def delete_task(task_id):
-    task = Task.query.get(task_id)
-    if task:
-        db.session.delete(task)
-        db.session.commit()
-    return redirect(url_for("task_list"))
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5001)
